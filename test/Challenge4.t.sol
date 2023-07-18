@@ -46,6 +46,12 @@ contract Challenge4Test is Test {
         // terminal command to run the specific test:       //
         // forge test --match-contract Challenge4Test -vvvv //
         ////////////////////////////////////////////////////*/
+
+        // @audit Factory address is the same as the 'EOA' that triggered the trasaction.
+        // Create2 address is calculated by the msg.sender address + salt + creation code
+        // We will use FACTORY to call the deploy() wich will create2 the new wallet contract.
+        assertEq(address(FACTORY), 0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f); 
+        // guess that the salt was 11, the month of the emplyees birthday 
         FACTORY.callWallet(
             address(FACTORY),
             abi.encodeWithSignature(
@@ -54,18 +60,11 @@ contract Challenge4Test is Test {
                 uint256(11) 
             )
         );
-        FACTORY.callWallet(
-            unclaimedAddress,
-            abi.encodeWithSignature("initialize(address)", whitehat)
-        );
-        unclaimedAddress.call(
-            abi.encodeWithSignature("withdrawERC20(address,uint256,address)", address(POSI), 1000 ether, devs)
-        );
+        VaultWalletTemplate vaultWallet = VaultWalletTemplate(unclaimedAddress);
+        vaultWallet.initialize(whitehat);
 
-        /* bytes memory bytecode = type(VaultWalletTemplate).creationCode;
-        VaultWalletTemplate vault = VaultWalletTemplate(payable(FACTORY.deploy(bytecode, 11)));
-        vault.initialize(whitehat);
-        vault.withdrawERC20(address(POSI), POSI.balanceOf(address(vault)), devs); */
+        // the ERC20 that we need were given to the address we just created, we just need to transfer them to the devs
+        vaultWallet.withdrawERC20(address(POSI), 1000 ether, devs);
         
         console.log("FACTORY address: %s", address(FACTORY));
 
